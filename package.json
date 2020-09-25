@@ -16,11 +16,12 @@
     "bugsnag"
   ],
   "authors": [
-    "Miloš Rašić <milos.rasic@redbox.com>",
+    "Miloš Rašić <milos.rasic@redbox.com>"
   ],
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/redboxllc/bugsnag-roku/issues"
   },
-  "homepage": "https://github.com/redboxllc/bugsnag-roku#readme"
+  "homepage": "https://github.com/redboxllc/bugsnag-roku#readme",
+  "devDependencies": {}
 }
