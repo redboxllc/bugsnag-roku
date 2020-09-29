@@ -5,7 +5,7 @@
 		<field id="code" type="integer" />
 		<field id="msg" type="string" />
 		<field id="identityId" type="string" />
-		<field id="data" type="node" />
+		<field id="data" type="assocArray" />
 		<field id="request" type="assocArray" />
 	</interface>
 
