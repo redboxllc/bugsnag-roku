@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="BugsnagTask" extends="Task" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+	<interface>
+		<field id="reqRepo" type="assocarray" />
+		<field id="request" type="assocarray" />
+		<field id="response" type="node" />
+
+		<field id="deleteReqReference" type="string" />
+	</interface>
+
+	<script type="text/brightscript" uri="pkg:/components/BugsnagTask.brs" />
+	<script type="text/brightscript" uri="pkg:/source/util.brs" />
+</component>
