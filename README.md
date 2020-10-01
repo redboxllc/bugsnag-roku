@@ -39,6 +39,7 @@ Note: bugsnagroku_ is automatically added to all component and function names by
 All functions are exposed on the instance of `bugsnagroku_BugsnagTask` component.
 
 **bugsnagroku_notify(errorClass as String, errorMessage as String, severity as String, context as String, metaData as Object)**
+
 Report an event to Bugsnag.
 
 | Param  | Description |
@@ -50,9 +51,11 @@ Report an event to Bugsnag.
 | metaData | {} | Metadata to attached to event.
 
 **bugsnagroku_updateUser(userDiff as Object)**
+
 Update user object sent with each event. The `userDiff` paremeter is an associative array mapping keys to update to their new values. In simple terms, any existing user associative array will be merged with the provided paramter.
 
 **bugsnagroku_leaveBreadcrumb(name as String, breadcrumbType as String, metaData={})**
+
 Add a new breadcrumb. All breadcrumbs are sent with every reported event.
 
 | Param  | Description |
