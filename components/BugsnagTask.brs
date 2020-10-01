@@ -1,6 +1,4 @@
 function init()
-	print "BUGSNAG TASK INIT"
-
 	m.notifier = {
 		name: "Bugsnag Roku",
 		url: "https://github.com/redboxllc/bugsnag-roku"
@@ -10,6 +8,16 @@ function init()
 	m.top.id = "BugsnagTask"
 	m.top.functionName = "bugsnagroku_startTask"
 
+	if m.top.user = invalid
+		m.user = {}
+	else
+		m.user = m.top.user
+	endif
+
+	if m.top.useIpAsUserId and m.user.id = invalid
+		m.user.id = getDeviceInfo().GetExternalIp()
+	end if
+
 	' Create a Message Port'
 	m.port = CreateObject("roMessagePort")
 	m.top.ObserveField("request", m.port)
@@ -18,25 +26,115 @@ function init()
 	m.jobs = {}
 	m.top.reqRepo = {}
 
-	m.deviceInfo = CreateObject("roDeviceInfo")
-	m.breadcrumbs = []
-end function
+	loadedBreadcrumb = {
+		name: "Bugsnag loaded",
+		timestamp: getNowISO(),
+		type: "navigation"
+	}
+	loadedBreadcrumb["metaData"] = {}
+	m.breadcrumbs = [loadedBreadcrumb]
 
-function notify()
-	print "BUGSNAG NOTIFY"
-
-	data = {
-		events: [],
-		notgifier: m.notifier
+	m.severities = {
+		error: true,
+		warning: true,
+		info: true,
 	}
 
-	data["apiKey"] = m.top.apiKey
+	m.top.ObserveField("response", "handleResponse")
+end function
+
+function updateUser(userDiff as Object)
+	if userDiff <> invalid
+		for each diffKey in userDiff
+			m.user[diffKey] = userDiff[diffKey]
+		end for
+	end if
+end function
+
+function leaveBreadcrumb(name as String, breadcrumbType as String, metaData={})
+	breadcrumb = {
+		name: name,
+		type: breadcrumbType,
+		timestamp: getNowISO()
+	}
+
+	if metaData <> invalid
+		breadcrumb["metaData"] = metaData
+	end if
+
+	m.breadcrumbs.Push(breadcrumb)
+end function
+
+function notify(errorClass as String, errorMessage as String, severity as String, context as String, metaData as Object)
+	data = {
+		events: [],
+		notifier: m.notifier
+	}
 
 	event = {
 		app: createAppPayload(),
 		breadcrumbs: m.breadcrumbs,
-		device: createDevicePayload()
+		device: createDevicePayload(),
+		unhandled: false
 	}
+
+	if context <> invalid
+		event["context"] = context
+	end if
+
+	exception = {
+		message: errorMessage,
+		stacktrace: []
+	}
+	exception["errorClass"] = errorClass
+	event["exceptions"] = [exception]
+
+	if (metadata <> invalid)
+		event["metaData"] = metaData
+	end if
+
+	event["payloadVersion"] = "4"
+
+	resolvedSeverity = "error"
+	if (severity <> invalid and m.severities.doesExist(severity))
+		resolvedSeverity = severity
+	end if
+
+	if (resolvedSeverity <> "info")
+		m.session.events[severity] = m.session.events[severity] + 1
+	end if
+
+	event["session"] = m.session
+	event["severity"] = resolvedSeverity
+	event["severityReason"] = {
+		type: "userSpecifiedSeverity"
+	}
+
+	if m.user <> invalid
+		event["user"] = m.user
+	end if
+
+	data["events"] = [event]
+
+	sendRequest({
+		url: "https://notify.bugsnag.com",
+		method: "POST",
+		headers: {
+			"bugsnag-api-key": m.top.apiKey,
+			"bugsnag-payload-version": "4",
+			"bugsnag-sent-at": getNowISO()
+		},
+		data: data,
+		callback: bugsnagroku_handleSessionResponse
+	})
+
+	breadcrumbMetadata = {
+		severity: severity
+	}
+	breadcrumbMetadata["errorClass"] = errorClass
+	breadcrumbMetadata["errorMessage"] = errorMessage
+
+	leaveBreadcrumb(errorClass, "error", breadcrumbMetadata)
 end function
 
 function createAppPayload()
@@ -50,19 +148,21 @@ function createAppPayload()
 end function
 
 function createDevicePayload()
+	deviceInfo = getDeviceInfo()
+
 	device = {
-		locale: m.deviceInfo.GetCurrentLocale(),
-		connection: m.deviceInfo.GetConnectionType(),
-		model: m.deviceInfo.GetModel(),
+		locale: deviceInfo.GetCurrentLocale(),
+		connection: deviceInfo.GetConnectionType(),
+		model: deviceInfo.GetModel(),
 		time: getNowISO(),
 		tts: getAudioGuideStatusAsString()
 	}
 
 	if m.top.reportChannelClientId
-		device["deviceId"] = m.deviceInfo.GetChannelClientId()
+		device["deviceId"] = deviceInfo.GetChannelClientId()
 	end if
 
-	device["firmwareVersion"] = m.deviceInfo.GetOSVersion()
+	device["firmwareVersion"] = deviceInfo.GetOSVersion()
 
 	return device
 end function
@@ -73,7 +173,7 @@ function getNowISO()
 end function
 
 function getAudioGuideStatusAsString()
-	if (m.deviceInfo.IsAudioGuideEnabled())
+	if (getDeviceInfo().IsAudioGuideEnabled())
 		return "true"
 	else
 		return "false"
@@ -81,8 +181,6 @@ function getAudioGuideStatusAsString()
 end function
 
 function startSession()
-	print "BUGSNAG START SESSION"
-
 	data = {
 		app: createAppPayload(),
 		device: createDevicePayload(),
@@ -95,12 +193,20 @@ function startSession()
 	session = {}
 	session["id"] = generateSessionId()
 	session["startedAt"] = now
-	if m.top.user <> invalid
-		session.user = m.top.user
+	if m.user <> invalid
+		session.user = m.user
 	end if
 	data.sessions.push(session)
 
-	m.top.ObserveFieldScoped("response", "handleSessionResponse")
+	m.session = {
+		id: session.id
+	}
+	m.session["startedAt"] = session.startedAt
+	sessionEvents = {
+		handled: 0
+		unhandled: 0
+	}
+	m.session["events"] = sessionEvents
 
 	sendRequest({
 		url: "https://sessions.bugsnag.com",
@@ -110,17 +216,17 @@ function startSession()
 			"bugsnag-payload-version": "1",
 			"bugsnag-sent-at": now
 		},
-		data: data
+		data: data,
+		callback: bugsnagroku_handleSessionResponse,
+		jsonResponse: true
 	})
 end function
 
 '***************
 ' startBugsnagTask:
-' @desc Long running task to execute HTTP requests, transforms the responses to usable content nodes (models)
+' @desc Long running task to execute HTTP requests
 '***************
 function startTask()
-	print "BUGSNAG START TASK"
-
 	startSession()
 
 	while (true)
@@ -148,8 +254,6 @@ end function
 ' @param Object roSGNode event
 '***************
 function handleHTTPRequest(event)
-	print "BUGSNAG HANDLE REQUEST"
-
 	' Get the request data and fire
 	request = event.GetData()
 
@@ -194,8 +298,6 @@ function handleHTTPRequest(event)
 
 	REM set headers
 	if request.headers <> invalid
-		print "BUGSNAG SET HEADERS"
-		print request.headers
 		httpTransfer.SetHeaders(request.headers)
 	end if
 	httpTransfer.AddHeader("Content-Type", "application/json")
@@ -204,15 +306,6 @@ function handleHTTPRequest(event)
 	httpTransfer.RetainBodyOnError(true)
 	httpTransfer.SetPort(m.port)
 	httpTransfer.SetMessagePort(m.port)
-
-	print "REQUEST URL " + request.url
-	if requestBody <> invalid
-		print "REQUEST BODY " + requestBody
-	end if
-	if request.headers <> invalid
-		print "REQEST HEADERS"
-		print request.headers
-	end if
 
 	REM perform the request
 	if isGetLikeRequest
@@ -239,8 +332,6 @@ end function
 ' @param object roUrlEvent Object
 '***************
 function handleHTTPResponse(event)
-	print "BUGSNAG HANDLE RESPONSE"
-
 	' Get the data and send it back
 	transferComplete = (event.GetInt() = 1)
 
@@ -254,24 +345,15 @@ function handleHTTPResponse(event)
 			body = event.GetString()
 			bodyNotEmpty = body <> invalid and body.Len() > 0
 
-			if bodyNotEmpty
+			if bodyNotEmpty and job.request.jsonResponse <> invalid and job.request.jsonResponse
 				data = parseJson(body)
 			end if
-
-			print "BUGSNAG RESPONSE SUCCESS"
-			print body
 
 			response = { error: false, code: code, data: data, request: job.request, msg: "" }
 			m.top.response = createResponseModel(response, identity.ToStr())
 		else
-			print "BUGSNAG RESPONSE FAILURE"
-			print code
-			print event.GetFailureReason()
-			print event.GetString()
-
 			error = { error: true, code: code, msg: event.GetFailureReason(), request: job.request, data: invalid }
 			m.top.response = createResponseModel(error, identity.ToStr())
-			' logNetworkError(job.request, event)
 		end if
 	end if
 end function
@@ -295,26 +377,21 @@ function createResponseModel(response as object, identityId = invalid) as object
 end function
 
 function sendRequest(req)
-	print "BUGSNAG SEND REQUEST"
-	print req
-
 	m.top.request = req
 
-	reqId = m.deviceInfo.GetRandomUUID()
-
+	reqId = getDeviceInfo().GetRandomUUID()
+	
 	reqRepo = m.top.reqRepo
 	reqRepo[reqId] = req
 	m.top.reqRepo = reqRepo
 end function
 
 function handleSessionResponse(res)
-	if res.error
-		print "BUGSNAG REQ FAIL"
-	else
-		print "BUGSNAG REQ SUCCESS"
-	end if
-
-	print res
-
 	m.top.UnobserveFieldScoped("response")
+end function
+
+function handleResponse(res)
+	if (res.callback)
+		res.callback(res)
+	end if
 end function

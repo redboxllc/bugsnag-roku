@@ -4,13 +4,19 @@
 		<field id="releaseStage" type="string" />
 		<field id="appVersion" type="string" />
 		<field id="apiKey" type="string" />
+		<field id="user" type="assocarray" />
 
 		<field id="reportChannelClientId" type="bool" value="true" />
+		<field id="useIpAsUserId" type="bool" value="true" />
 
 		<field id="reqRepo" type="assocarray" />
 		<field id="request" type="assocarray" />
 		<field id="response" type="node" />
 		<field id="deleteReqReference" type="string" />
+
+		<function name="bugsnagroku_notify" />
+		<function name="bugsnagroku_leaveBreadcrumb" />
+		<function name="bugsnagroku_updateUser" />
 	</interface>
 
 	<script type="text/brightscript" uri="pkg:/components/BugsnagTask.brs" />

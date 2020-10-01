@@ -8,3 +8,11 @@ function generateSessionId()
 
 	return id
 end function
+
+function getDeviceInfo() as object
+	if m.deviceInfo = invalid
+		m.deviceInfo = CreateObject("roDeviceInfo")
+	end if
+
+	return m.deviceInfo
+end function
