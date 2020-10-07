@@ -41,6 +41,7 @@ function init()
 	}
 
 	m.top.ObserveField("response", "handleResponse")
+	startSession()
 end function
 
 function updateUser(userDiff as Object)
@@ -100,9 +101,8 @@ function notify(errorClass as String, errorMessage as String, severity as String
 		resolvedSeverity = severity
 	end if
 
-	if (resolvedSeverity <> "info")
-		m.session.events[severity] = m.session.events[severity] + 1
-	end if
+	' Only handled events are possible from brightscript so far
+	m.session.events.handled = m.session.events.handled + 1
 
 	event["session"] = m.session
 	event["severity"] = resolvedSeverity
@@ -227,8 +227,6 @@ end function
 ' @desc Long running task to execute HTTP requests
 '***************
 function startTask()
-	startSession()
-
 	while (true)
 		event = Wait(0, m.port)
 		eventType = Type(event)
