@@ -322,7 +322,9 @@ function handleHTTPRequest(event)
 	else
 		error = { error: true, code: -10, msg: "Failed to create request for : " + request.url, request: request, data: invalid }
 		m.top.response = createResponseModel(error)
-		logNetworkError(request, error)
+		if m.top.logNetworkErrors
+			logNetworkError(request, error)
+		end if
 	end if
 end function
 
@@ -353,6 +355,9 @@ function handleHTTPResponse(event)
 		else
 			error = { error: true, code: code, msg: event.GetFailureReason(), request: job.request, data: invalid }
 			m.top.response = createResponseModel(error, identity.ToStr())
+			if m.top.logNetworkErrors
+				logNetworkError(request, error)
+			end if
 		end if
 	end if
 end function
@@ -396,5 +401,26 @@ function handleResponse(res)
 end function
 
 function logNetworkError(request as object, error as object)
-	print error.message
+	print " **************************************** HTTP ERROR ****************************************** "
+	print " ======================================== Request info ======================================== "
+	print chr(10)
+
+	if request <> invalid
+		print " URL: "; request.url
+		print " Query Params: "; request.queryParams
+		print " Request Headers: " + chr(10)
+		for each header in request.headers
+			print " " + header + ": " + request.headers[header] + chr(10)
+		end for
+		print " Request Body: "; request.data
+	end if
+
+	print chr(10)
+	print " ========================================   Response info ===================================== "
+	print chr(10)
+
+	print " Error code: ", error.code
+	print " Failure Reason: "; error.msg
+
+	print " ************************************************************************************************* "
 end function
