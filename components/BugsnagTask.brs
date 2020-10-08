@@ -2,7 +2,7 @@ function init()
 	m.notifier = {
 		name: "Bugsnag Roku",
 		url: "https://github.com/redboxllc/bugsnag-roku"
-		version: "0.0.1"
+		version: "0.0.3"
 	}
 
 	m.top.id = "BugsnagTask"
@@ -41,7 +41,6 @@ function init()
 	}
 
 	m.top.ObserveField("response", "handleResponse")
-	startSession()
 end function
 
 function updateUser(userDiff as Object)
@@ -102,9 +101,9 @@ function notify(errorClass as String, errorMessage as String, severity as String
 	end if
 
 	' Only handled events are possible from brightscript so far
-	m.session.events.handled = m.session.events.handled + 1
+	m.top.session.events.handled = m.top.session.events.handled + 1
 
-	event["session"] = m.session
+	event["session"] = m.top.session
 	event["severity"] = resolvedSeverity
 	event["severityReason"] = {
 		type: "userSpecifiedSeverity"
@@ -198,15 +197,16 @@ function startSession()
 	end if
 	data.sessions.push(session)
 
-	m.session = {
+	session = {
 		id: session.id
 	}
-	m.session["startedAt"] = session.startedAt
+	session["startedAt"] = session.startedAt
 	sessionEvents = {
 		handled: 0
 		unhandled: 0
 	}
-	m.session["events"] = sessionEvents
+	session["events"] = sessionEvents
+	m.top.session = session
 
 	sendRequest({
 		url: "https://sessions.bugsnag.com",
@@ -227,6 +227,8 @@ end function
 ' @desc Long running task to execute HTTP requests
 '***************
 function startTask()
+	startSession()
+
 	while (true)
 		event = Wait(0, m.port)
 		eventType = Type(event)
@@ -389,7 +391,15 @@ function handleSessionResponse(res)
 end function
 
 function handleResponse(res)
-	if (res.callback)
+	if type(res) = "roSGNodeEvent"
+		print "Bugsnag response"
+		data = res.getData()
+		print data
+		print "request headers"
+		print FormatJson(data.request.headers)
+		print "request body"
+		print FormatJson(data.request.data)
+	else if res.callback <> invalid
 		res.callback(res)
 	end if
 end function

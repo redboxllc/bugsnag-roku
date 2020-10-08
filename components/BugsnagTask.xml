@@ -14,6 +14,8 @@
 		<field id="response" type="node" />
 		<field id="deleteReqReference" type="string" />
 
+		<field id="session" type="assocarray" />
+
 		<function name="bugsnagroku_notify" />
 		<function name="bugsnagroku_leaveBreadcrumb" />
 		<function name="bugsnagroku_updateUser" />
