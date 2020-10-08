@@ -39,8 +39,6 @@ function init()
 		warning: true,
 		info: true,
 	}
-
-	m.top.ObserveField("response", "handleResponse")
 end function
 
 function updateUser(userDiff as object)
@@ -123,8 +121,7 @@ function notify(errorClass as string, errorMessage as string, severity as string
 			"bugsnag-payload-version": "4",
 			"bugsnag-sent-at": getNowISO()
 		},
-		data: data,
-		callback: bugsnagroku_handleSessionResponse
+		data: data
 	})
 
 	breadcrumbMetadata = {
@@ -217,7 +214,6 @@ function startSession()
 			"bugsnag-sent-at": now
 		},
 		data: data,
-		callback: bugsnagroku_handleSessionResponse,
 		jsonResponse: true
 	})
 end function
@@ -388,24 +384,6 @@ function sendRequest(req)
 	reqRepo = m.top.reqRepo
 	reqRepo[reqId] = req
 	m.top.reqRepo = reqRepo
-end function
-
-function handleSessionResponse(res)
-	m.top.UnobserveFieldScoped("response")
-end function
-
-function handleResponse(res)
-	if type(res) = "roSGNodeEvent"
-		print "Bugsnag response"
-		data = res.getData()
-		print data
-		print "request headers"
-		print FormatJson(data.request.headers)
-		print "request body"
-		print FormatJson(data.request.data)
-	else if res.callback <> invalid
-		res.callback(res)
-	end if
 end function
 
 function logNetworkError(request as object, error as object)
