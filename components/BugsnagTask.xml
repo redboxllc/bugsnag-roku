@@ -13,6 +13,7 @@
 		<field id="request" type="assocarray" />
 		<field id="response" type="node" />
 		<field id="deleteReqReference" type="string" />
+		<field id="logNetworkErrors" type="boolean" value="false" />
 
 		<field id="session" type="assocarray" />
 

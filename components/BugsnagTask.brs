@@ -12,7 +12,7 @@ function init()
 		m.user = {}
 	else
 		m.user = m.top.user
-	endif
+	end if
 
 	if m.top.useIpAsUserId and m.user.id = invalid
 		m.user.id = getDeviceInfo().GetExternalIp()
@@ -43,7 +43,7 @@ function init()
 	m.top.ObserveField("response", "handleResponse")
 end function
 
-function updateUser(userDiff as Object)
+function updateUser(userDiff as object)
 	if userDiff <> invalid
 		for each diffKey in userDiff
 			m.user[diffKey] = userDiff[diffKey]
@@ -51,7 +51,7 @@ function updateUser(userDiff as Object)
 	end if
 end function
 
-function leaveBreadcrumb(name as String, breadcrumbType as String, metaData={})
+function leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {})
 	breadcrumb = {
 		name: name,
 		type: breadcrumbType,
@@ -65,7 +65,7 @@ function leaveBreadcrumb(name as String, breadcrumbType as String, metaData={})
 	m.breadcrumbs.Push(breadcrumb)
 end function
 
-function notify(errorClass as String, errorMessage as String, severity as String, context as String, metaData as Object)
+function notify(errorClass as string, errorMessage as string, severity as string, context as string, metaData as object)
 	data = {
 		events: [],
 		notifier: m.notifier
@@ -237,7 +237,7 @@ function startTask()
 			eventField = event.GetField()
 
 			if eventField = "request"
-					handleHTTPRequest(event)
+				handleHTTPRequest(event)
 			else if eventField = "deleteReqReference"
 				reqId = event.GetData()
 				job = m.jobs.Lookup(reqId)
@@ -314,7 +314,6 @@ function handleHTTPRequest(event)
 		success = httpTransfer.AsyncPostFromString(requestBody)
 	end if
 
-
 	if success
 		identity = httpTransfer.GetIdentity()
 
@@ -323,7 +322,9 @@ function handleHTTPRequest(event)
 	else
 		error = { error: true, code: -10, msg: "Failed to create request for : " + request.url, request: request, data: invalid }
 		m.top.response = createResponseModel(error)
-	 	' logNetworkError(request, error)
+		if m.top.logNetworkErrors
+			logNetworkError(request, error)
+		end if
 	end if
 end function
 
@@ -354,6 +355,9 @@ function handleHTTPResponse(event)
 		else
 			error = { error: true, code: code, msg: event.GetFailureReason(), request: job.request, data: invalid }
 			m.top.response = createResponseModel(error, identity.ToStr())
+			if m.top.logNetworkErrors
+				logNetworkError(request, error)
+			end if
 		end if
 	end if
 end function
@@ -380,7 +384,7 @@ function sendRequest(req)
 	m.top.request = req
 
 	reqId = getDeviceInfo().GetRandomUUID()
-	
+
 	reqRepo = m.top.reqRepo
 	reqRepo[reqId] = req
 	m.top.reqRepo = reqRepo
@@ -402,4 +406,29 @@ function handleResponse(res)
 	else if res.callback <> invalid
 		res.callback(res)
 	end if
+end function
+
+function logNetworkError(request as object, error as object)
+	print " **************************************** HTTP ERROR ****************************************** "
+	print " ======================================== Request info ======================================== "
+	print chr(10)
+
+	if request <> invalid
+		print " URL: "; request.url
+		print " Query Params: "; request.queryParams
+		print " Request Headers: " + chr(10)
+		for each header in request.headers
+			print " " + header + ": " + request.headers[header] + chr(10)
+		end for
+		print " Request Body: "; request.data
+	end if
+
+	print chr(10)
+	print " ========================================   Response info ===================================== "
+	print chr(10)
+
+	print " Error code: ", error.code
+	print " Failure Reason: "; error.msg
+
+	print " ************************************************************************************************* "
 end function
