@@ -37,6 +37,7 @@ There is currently no way to automatically handle all errors or collect user int
 | user | {} | Initial user data. This can be updated later using `bugsnagroku_updateUser()` function. If user ID is not set, the library may set it to device IP automatically (see below) |
 | reportChannelClientId | true | Whether to report channel client ID as part of device info. Client channel ID is unique per device/channel combination. It can uniquely identify a user within a Roku channel but not between multiple channels. |
 | useIpAsUserId | true | Whether to set user ID to device IP if it's not set in the initial user data. |
+| logNetworkErrors | false | Whether to log any network errors that may be returned when making requests to Bugsnag API. | 
 
 ## API reference
 
