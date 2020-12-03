@@ -2,7 +2,7 @@ function init()
 	m.notifier = {
 		name: "Bugsnag Roku",
 		url: "https://github.com/redboxllc/bugsnag-roku"
-		version: "0.0.3"
+		version: "1.0.0"
 	}
 
 	m.top.id = "BugsnagTask"
