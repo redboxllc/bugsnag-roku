@@ -4,6 +4,7 @@
   "description": "Bugsnag library for Roku",
   "main": "index.js",
   "scripts": {
+    "release": "standard-version",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,5 +24,8 @@
     "url": "https://github.com/redboxllc/bugsnag-roku/issues"
   },
   "homepage": "https://github.com/redboxllc/bugsnag-roku#readme",
-  "devDependencies": {}
+  "devDependencies": {},
+  "dependencies": {
+    "standard-version": "^9.0.0"
+  }
 }
