@@ -21,10 +21,8 @@ function init()
 	' Create a Message Port'
 	m.port = CreateObject("roMessagePort")
 	m.top.ObserveField("request", m.port)
-	m.top.ObserveField("deleteReqReference", m.port)
 
 	m.jobs = {}
-	m.top.reqRepo = {}
 
 	loadedBreadcrumb = {
 		name: "Bugsnag loaded",
@@ -234,10 +232,6 @@ function startTask()
 
 			if eventField = "request"
 				handleHTTPRequest(event)
-			else if eventField = "deleteReqReference"
-				reqId = event.GetData()
-				job = m.jobs.Lookup(reqId)
-				m.jobs.Delete(reqId)
 			end if
 		else if eventType = "roUrlEvent"
 			handleHTTPResponse(event)
@@ -355,6 +349,8 @@ function handleHTTPResponse(event)
 				logNetworkError(request, error)
 			end if
 		end if
+
+		m.jobs.Delete(identity.toStr())
 	end if
 end function
 
@@ -378,12 +374,6 @@ end function
 
 function sendRequest(req)
 	m.top.request = req
-
-	reqId = getDeviceInfo().GetRandomUUID()
-
-	reqRepo = m.top.reqRepo
-	reqRepo[reqId] = req
-	m.top.reqRepo = reqRepo
 end function
 
 function logNetworkError(request as object, error as object)
