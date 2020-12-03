@@ -1,6 +1,6 @@
 {
   "name": "bugsnag-roku",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "Bugsnag library for Roku",
   "main": "index.js",
   "scripts": {
