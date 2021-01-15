@@ -96,8 +96,10 @@ function notify(errorClass as string, errorMessage as string, severity as string
 		resolvedSeverity = severity
 	end if
 
-	' Only handled events are possible from brightscript so far
-	m.top.session.events.handled = m.top.session.events.handled + 1
+	if m.top.session <> invalid and m.top.session.events <> invalid
+		' Only handled events are possible from brightscript so far
+		m.top.session.events.handled = m.top.session.events.handled + 1
+	end if
 
 	event["session"] = m.top.session
 	event["severity"] = resolvedSeverity
