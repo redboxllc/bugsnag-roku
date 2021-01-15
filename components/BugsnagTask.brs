@@ -155,7 +155,9 @@ function notify(errorClass as string, errorMessage as string, severity as string
 
 	if m.top.session <> invalid and m.top.session.events <> invalid
 		' Only handled events are possible from brightscript so far
-		m.top.session.events.handled = m.top.session.events.handled + 1
+		session = m.top.session
+		session.events.handled = session.events.handled + 1
+		m.top.session = session
 	end if
 
 	event["session"] = m.top.session
@@ -200,13 +202,16 @@ end function
 
 function createDevicePayload()
 	deviceInfo = getDeviceInfo()
+	uiResolution = m.deviceInfo.GetUIResolution()
 
 	device = {
-		locale: deviceInfo.GetCurrentLocale(),
 		connection: deviceInfo.GetConnectionType(),
+		generalMemoryLevel: deviceInfo.GetGeneralMemoryLevel(),
+		locale: deviceInfo.GetCurrentLocale(),
 		model: deviceInfo.GetModel(),
 		time: getNowISO(),
 		tts: getAudioGuideStatusAsString()
+		uiResolution: uiResolution.height.ToStr() + "x" + uiResolution.width.ToStr()
 	}
 
 	if m.top.reportChannelClientId
@@ -328,24 +333,6 @@ function handleHTTPResponse(event)
 
 		m.jobs.Delete(identity.toStr())
 	end if
-end function
-
-'***************
-' @desc Creates a response model
-' @param Object
-' @return Object ContentNode'
-'***************
-function createResponseModel(response as object, identityId = invalid) as object
-	responseModel = CreateObject("roSGNode", "ResponseModel")
-	responseModel.errorStatus = response.error
-	responseModel.code = response.code
-	responseModel.data = response.data
-	responseModel.msg = response.msg
-	responseModel.request = response.request
-
-	if identityId <> invalid then responseModel.identityId = identityId
-
-	return responseModel
 end function
 
 function logNetworkError(error as object)
