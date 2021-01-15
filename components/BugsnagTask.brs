@@ -20,7 +20,6 @@ function init()
 
 	' Create a Message Port'
 	m.port = CreateObject("roMessagePort")
-	m.top.ObserveField("request", m.port)
 
 	m.jobs = {}
 
@@ -37,6 +36,64 @@ function init()
 		warning: true,
 		info: true,
 	}
+end function
+
+'***************
+' startBugsnagTask:
+' @desc Long running task to execute HTTP requests
+'***************
+function startTask()
+	startSession()
+
+	while (true)
+		event = Wait(0, m.port)
+		eventType = Type(event)
+		if eventType = "roUrlEvent"
+			handleHTTPResponse(event)
+		end if
+	end while
+end function
+
+function startSession()
+	data = {
+		app: createAppPayload(),
+		device: createDevicePayload(),
+		notifier: m.notifier,
+		sessions: []
+	}
+
+	now = getNowISO()
+
+	session = {}
+	session["id"] = generateSessionId()
+	session["startedAt"] = now
+	if m.user <> invalid
+		session.user = m.user
+	end if
+	data.sessions.push(session)
+
+	session = {
+		id: session.id
+	}
+	session["startedAt"] = session.startedAt
+	sessionEvents = {
+		handled: 0
+		unhandled: 0
+	}
+	session["events"] = sessionEvents
+	m.top.session = session
+
+	sendRequest({
+		url: "https://sessions.bugsnag.com",
+		method: "POST",
+		headers: {
+			"bugsnag-api-key": m.top.apiKey,
+			"bugsnag-payload-version": "1",
+			"bugsnag-sent-at": now
+		},
+		data: data,
+		jsonResponse: true
+	})
 end function
 
 function updateUser(userDiff as object)
@@ -98,7 +155,9 @@ function notify(errorClass as string, errorMessage as string, severity as string
 
 	if m.top.session <> invalid and m.top.session.events <> invalid
 		' Only handled events are possible from brightscript so far
-		m.top.session.events.handled = m.top.session.events.handled + 1
+		session = m.top.session
+		session.events.handled = session.events.handled + 1
+		m.top.session = session
 	end if
 
 	event["session"] = m.top.session
@@ -124,9 +183,7 @@ function notify(errorClass as string, errorMessage as string, severity as string
 		data: data
 	})
 
-	breadcrumbMetadata = {
-		severity: severity
-	}
+	breadcrumbMetadata = { severity: severity }
 	breadcrumbMetadata["errorClass"] = errorClass
 	breadcrumbMetadata["errorMessage"] = errorMessage
 
@@ -145,13 +202,16 @@ end function
 
 function createDevicePayload()
 	deviceInfo = getDeviceInfo()
+	uiResolution = m.deviceInfo.GetUIResolution()
 
 	device = {
-		locale: deviceInfo.GetCurrentLocale(),
 		connection: deviceInfo.GetConnectionType(),
+		generalMemoryLevel: deviceInfo.GetGeneralMemoryLevel(),
+		locale: deviceInfo.GetCurrentLocale(),
 		model: deviceInfo.GetModel(),
 		time: getNowISO(),
 		tts: getAudioGuideStatusAsString()
+		uiResolution: uiResolution.height.ToStr() + "x" + uiResolution.width.ToStr()
 	}
 
 	if m.top.reportChannelClientId
@@ -176,82 +236,14 @@ function getAudioGuideStatusAsString()
 	end if
 end function
 
-function startSession()
-	data = {
-		app: createAppPayload(),
-		device: createDevicePayload(),
-		notifier: m.notifier,
-		sessions: []
-	}
-
-	now = getNowISO()
-
-	session = {}
-	session["id"] = generateSessionId()
-	session["startedAt"] = now
-	if m.user <> invalid
-		session.user = m.user
-	end if
-	data.sessions.push(session)
-
-	session = {
-		id: session.id
-	}
-	session["startedAt"] = session.startedAt
-	sessionEvents = {
-		handled: 0
-		unhandled: 0
-	}
-	session["events"] = sessionEvents
-	m.top.session = session
-
-	sendRequest({
-		url: "https://sessions.bugsnag.com",
-		method: "POST",
-		headers: {
-			"bugsnag-api-key": m.top.apiKey,
-			"bugsnag-payload-version": "1",
-			"bugsnag-sent-at": now
-		},
-		data: data,
-		jsonResponse: true
-	})
-end function
-
-'***************
-' startBugsnagTask:
-' @desc Long running task to execute HTTP requests
-'***************
-function startTask()
-	startSession()
-
-	while (true)
-		event = Wait(0, m.port)
-		eventType = Type(event)
-
-		if eventType = "roSGNodeEvent"
-			eventField = event.GetField()
-
-			if eventField = "request"
-				handleHTTPRequest(event)
-			end if
-		else if eventType = "roUrlEvent"
-			handleHTTPResponse(event)
-		end if
-	end while
-end function
-
 '***************
 ' @desc Handles HTTP requests
 ' @param Object roSGNode event
 '***************
-function handleHTTPRequest(event)
-	' Get the request data and fire
-	request = event.GetData()
-
+function sendRequest(request as object)
 	httpTransfer = CreateObject("roUrlTransfer")
 
-	' Add Roku cert for HTTPS requests
+	REM Add Roku cert for HTTPS requests
 	if request.url.Left(6) = "https:"
 		httpTransfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
 		httpTransfer.AddHeader("X-Roku-Reserved-Dev-Id", "")
@@ -308,14 +300,12 @@ function handleHTTPRequest(event)
 
 	if success
 		identity = httpTransfer.GetIdentity()
-
 		job = { httpTransfer: httpTransfer, request: request }
 		m.jobs[identity.ToStr()] = job
 	else
-		error = { error: true, code: -10, msg: "Failed to create request for : " + request.url, request: request, data: invalid }
-		m.top.response = createResponseModel(error)
+		error = { code: -10, msg: "Failed to create request for : " + request.url, request: request }
 		if m.top.logNetworkErrors
-			logNetworkError(request, error)
+			logNetworkError(error)
 		end if
 	end if
 end function
@@ -325,30 +315,19 @@ end function
 ' @param object roUrlEvent Object
 '***************
 function handleHTTPResponse(event)
-	' Get the data and send it back
 	transferComplete = (event.GetInt() = 1)
 
 	if transferComplete
-		code = event.GetResponseCode()
 		identity = event.GetSourceIdentity()
 		job = m.jobs.Lookup(identity.ToStr())
 
-		if (code >= 200) and (code < 300) and job <> invalid
-			data = {}
-			body = event.GetString()
-			bodyNotEmpty = body <> invalid and body.Len() > 0
-
-			if bodyNotEmpty and job.request.jsonResponse <> invalid and job.request.jsonResponse
-				data = parseJson(body)
-			end if
-
-			response = { error: false, code: code, data: data, request: job.request, msg: "" }
-			m.top.response = createResponseModel(response, identity.ToStr())
-		else
-			error = { error: true, code: code, msg: event.GetFailureReason(), request: job.request, data: invalid }
-			m.top.response = createResponseModel(error, identity.ToStr())
-			if m.top.logNetworkErrors
-				logNetworkError(request, error)
+		if m.top.enableHttpLogs
+			code = event.GetResponseCode()
+			if (code >= 200) and (code < 300) and job <> invalid
+				logNetworkResponse(event)
+			else
+				error = { code: code, msg: event.GetFailureReason(), request: job.request }
+				logNetworkError(error)
 			end if
 		end if
 
@@ -356,33 +335,11 @@ function handleHTTPResponse(event)
 	end if
 end function
 
-'***************
-' @desc Creates a response model
-' @param Object
-' @return Object ContentNode'
-'***************
-function createResponseModel(response as object, identityId = invalid) as object
-	responseModel = CreateObject("roSGNode", "ResponseModel")
-	responseModel.errorStatus = response.error
-	responseModel.code = response.code
-	responseModel.data = response.data
-	responseModel.msg = response.msg
-	responseModel.request = response.request
-
-	if identityId <> invalid then responseModel.identityId = identityId
-
-	return responseModel
-end function
-
-function sendRequest(req)
-	m.top.request = req
-end function
-
-function logNetworkError(request as object, error as object)
+function logNetworkError(error as object)
+	request = error.request
 	print " **************************************** HTTP ERROR ****************************************** "
 	print " ======================================== Request info ======================================== "
 	print chr(10)
-
 	if request <> invalid
 		print " URL: "; request.url
 		print " Query Params: "; request.queryParams
@@ -392,13 +349,25 @@ function logNetworkError(request as object, error as object)
 		end for
 		print " Request Body: "; request.data
 	end if
-
 	print chr(10)
 	print " ========================================   Response info ===================================== "
 	print chr(10)
 
 	print " Error code: ", error.code
 	print " Failure Reason: "; error.msg
-
 	print " ************************************************************************************************* "
+end function
+
+function logNetworkResponse(roUrlEvt as object)
+	print " **************************************** HTTP RESPONSE ****************************************** "
+	print " ======================================== Response info ======================================== "
+	print chr(10)
+	if response <> invalid
+		print " Response code: " + roUrlEvt.GetResponseCode() + chr(10)
+		print " Response Body: "; roUrlEvt.GetString()
+		print " Response Headers: " + chr(10)
+		for each header in roUrlEvt.GetResponseHeadersArray()
+			print " " + header + chr(10)
+		end for
+	end if
 end function
