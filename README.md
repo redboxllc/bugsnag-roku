@@ -6,6 +6,9 @@ bugsnag-roku implements a Bugsnag error reporting client for Roku as a Task Scen
 
 There is currently no way to automatically handle all errors or collect user interaction data as breadcrumbs, so these actions are left to the library user to implement as they see fit.
 
+[![NPM](https://img.shields.io/npm/l/bugsnag-roku?style=flat-square)](https://github.com/redboxllc/bugsnag-roku/blob/master/LICENSE)
+[![npm](https://img.shields.io/npm/v/bugsnag-roku?label=ropm&style=flat-square)](https://www.npmjs.com/package/bugsnag-roku)
+
 ## Getting started
 
 1. [Create a Bugsnag account](https://www.bugsnag.com)
