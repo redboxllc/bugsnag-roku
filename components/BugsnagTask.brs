@@ -118,7 +118,20 @@ function leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {}
 	m.breadcrumbs.Push(breadcrumb)
 end function
 
-function notify(errorClass as string, errorMessage as string, severity as string, context as string, metaData as object)
+' /**
+'  * notify: Notifies the Bugsnag API that an error(s) has happened, and leaves an error breadcrumb
+'  *
+'  * @param {errorClass as string, errorMessage as string, severity as string, context as string, exceptions as object, metaData as object} errorInfo
+'  * @return {Dynamic}
+'  */
+function notify(errorInfo as object)
+	errorClass = errorInfo.errorClass
+	errorMessage = errorInfo.errorMessage
+	severity = errorInfo.severity
+	context = errorInfo.context
+	exceptions = errorInfo.exceptions
+	metaData = errorInfo.metaData
+
 	data = {
 		events: [],
 		notifier: m.notifier
@@ -135,12 +148,16 @@ function notify(errorClass as string, errorMessage as string, severity as string
 		event["context"] = context
 	end if
 
-	exception = {
-		message: errorMessage,
-		stacktrace: []
-	}
-	exception["errorClass"] = errorClass
-	event["exceptions"] = [exception]
+	if exceptions <> invalid
+		event["exceptions"] = exceptions
+	else
+		exception = {
+			message: errorMessage,
+			stacktrace: []
+		}
+		exception["errorClass"] = errorClass
+		event["exceptions"] = [exception]
+	end if
 
 	if (metadata <> invalid)
 		event["metaData"] = metaData
