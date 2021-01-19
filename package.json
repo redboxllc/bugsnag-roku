@@ -16,8 +16,9 @@
 		"roku",
 		"bugsnag"
 	],
-	"authors": [
-		"Miloš Rašić <milos.rasic@redbox.com>"
+	"author": "Miloš Rašić <milos.rasic@redbox.com>",
+	"contributors": [
+		"Darko Tasevski <darko.tasevski@redbox.com>"
 	],
 	"license": "Apache-2.0",
 	"bugs": {
