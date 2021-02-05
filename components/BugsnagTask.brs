@@ -124,7 +124,9 @@ end function
 '  * @param {errorClass as string, errorMessage as string, severity as string, context as string, exceptions as object, metaData as object} errorInfo
 '  * @return {Dynamic}
 '  */
-function notify(errorInfo as object)
+function notify(event as object)
+	errorInfo = event.getData()
+
 	errorClass = errorInfo.errorClass
 	errorMessage = errorInfo.errorMessage
 	severity = errorInfo.severity
