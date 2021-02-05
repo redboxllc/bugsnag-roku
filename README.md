@@ -6,8 +6,7 @@ bugsnag-roku implements a Bugsnag error reporting client for Roku as a Task Scen
 
 There is currently no way to automatically handle all errors or collect user interaction data as breadcrumbs, so these actions are left to the library user to implement as they see fit.
 
-[![NPM](https://img.shields.io/npm/l/bugsnag-roku?style=flat-square)](https://github.com/redboxllc/bugsnag-roku/blob/master/LICENSE)
-[![npm](https://img.shields.io/npm/v/bugsnag-roku?label=ropm&style=flat-square)](https://www.npmjs.com/package/bugsnag-roku)
+[![NPM](https://img.shields.io/npm/l/bugsnag-roku?style=flat-square)](https://github.com/redboxllc/bugsnag-roku/blob/master/LICENSE) [![npm](https://img.shields.io/npm/v/bugsnag-roku?label=ropm&style=flat-square)](https://www.npmjs.com/package/bugsnag-roku)
 
 ## Getting started
 
@@ -26,7 +25,7 @@ There is currently no way to automatically handle all errors or collect user int
 	m.top.bugsnagTask.control = "RUN"
 ```
 
-5. Use the functions exposed on the Bugsnag task component to report events to Bugsnag.
+5. Use the fields and functions exposed on the `BugsnagTask` component to report events to Bugsnag.
 
 > `bugsnagroku_` is automatically added to all component and function names by ropm. At the moment, copying files into your project manually isn't supported out of the box because of ropm's partial prefixing. You would have to open all the source code files and remove all bugsnagroku\_ prefixes.
 
@@ -40,25 +39,30 @@ There is currently no way to automatically handle all errors or collect user int
 | user | {} | Initial user data. This can be updated later using `bugsnagroku_updateUser()` function. If user ID is not set, the library may set it to device IP automatically (see below) |
 | reportChannelClientId | true | Whether to report channel client ID as part of device info. Client channel ID is unique per device/channel combination. It can uniquely identify a user within a Roku channel but not between multiple channels. |
 | useIpAsUserId | true | Whether to set user ID to device IP if it's not set in the initial user data. |
-| logNetworkErrors | false | Whether to log any network errors that may be returned when making requests to Bugsnag API. | 
+| logNetworkErrors | false | Whether to log any network errors that may be returned when making requests to Bugsnag API. |
 
 ## API reference
 
 All functions are exposed on the instance of `bugsnagroku_BugsnagTask` component.
 
-```brightscript
-bugsnagroku_notify(errorClass as String, errorMessage as String, severity as String, context as String, metaData as Object)
+```xml
+<field id="notify" type="AssocArray" onChange="bugsnagroku_notify" />
 ```
 
-Report an event to Bugsnag.
+Report an event to Bugsnag, by setting the error data as associative array to the `notify` field.
+
+```brightscript
+m.top.bugsnagTask.notify = { errorClass: errorClass, errorMessage: errorMessage, severity: severity, context: context, exceptions: exceptions, metadata: metadata }
+```
 
 | Param | Description |
-| --- | --- |
+| --- | --- | --- |
 | errorClass | Error class shown in Bugsnag UI. Since there is no automatic error handling in BrightScript, this can be any string. Something like "HttpError" or "ValidationError" is recommended since Bugsnag UI is designed to show error classes like that from other languages. |
 | errorMessage | Error message shown in Bugsnag UI. This should concisely describe what happened so that it can be easily both read and searched. |
 | severity | Event severity as defined by Bugsnag API. It can be `error`, `warning` or `info`. If an invalid value is supplied, the library will default to `error`. |
 | context | Location where the error happened. In web UIs this is the URL. Since Roku has no notion of a URL, this can be omitted, but it might be a good idea to send at least the name of the file where error occurred. |
-| metaData | {} | Metadata to attached to event. |
+| metaData | Metadata to attached to event. |  |
+| exceptions | Array of errorClass exceptions related to the error happened |  |
 
 ```brightscript
 bugsnagroku_updateUser(userDiff as Object)

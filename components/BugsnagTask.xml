@@ -6,13 +6,14 @@
 		<field id="apiKey" type="String" />
 		<field id="user" type="AssocArray" />
 
+		<field id="notify" type="AssocArray" onChange="bugsnagroku_notify" />
+
 		<field id="reportChannelClientId" type="Boolean" value="true" />
 		<field id="useIpAsUserId" type="Boolean" value="true" />
 		<field id="enableHttpLogs" type="Boolean" value="false" />
 
 		<field id="session" type="AssocArray" />
 
-		<function name="bugsnagroku_notify" />
 		<function name="bugsnagroku_leaveBreadcrumb" />
 		<function name="bugsnagroku_updateUser" />
 	</interface>
