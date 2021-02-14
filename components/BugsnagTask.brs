@@ -259,8 +259,15 @@ end function
 ' @desc Handles HTTP requests
 ' @param Object roSGNode event
 '***************
-function sendRequest(request as object)
+function sendRequest(request as object) as void
 	httpTransfer = CreateObject("roUrlTransfer")
+
+	if httpTransfer = invalid
+		' This can happen if for some reason the sendRequest is executed on the render thread.
+		' Until we add some test coverage, maybe it's better to exit early and not send the err report than to crash the app
+		print "[ERROR] [BugsnagRokuTask] roUrlTransfer is invalid. Request is not sent."
+		return
+	end if
 
 	REM Add Roku cert for HTTPS requests
 	if request.url.Left(6) = "https:"
