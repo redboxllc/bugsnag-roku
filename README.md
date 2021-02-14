@@ -43,7 +43,7 @@ There is currently no way to automatically handle all errors or collect user int
 
 ## API reference
 
-All functions are exposed on the instance of `bugsnagroku_BugsnagTask` component.
+All fields and functions are exposed on the instance of `bugsnagroku_BugsnagTask` component.
 
 ```xml
 <field id="notify" type="AssocArray" onChange="bugsnagroku_notify" />
