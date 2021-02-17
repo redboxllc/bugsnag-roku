@@ -45,11 +45,19 @@ end function
 function startTask()
 	startSession()
 
+	m.top.observeFieldScoped("notify", m.port)
+
 	while (true)
 		event = Wait(0, m.port)
 		eventType = Type(event)
 		if eventType = "roUrlEvent"
 			handleHTTPResponse(event)
+		else if eventType = "roSGNodeEvent"
+			field = event.GetField()
+			if field = "notify"
+				eventData = event.GetData()
+				notify(eventData)
+			end if
 		end if
 	end while
 end function
@@ -124,9 +132,7 @@ end function
 '  * @param {errorClass as string, errorMessage as string, severity as string, context as string, exceptions as object, metaData as object} errorInfo
 '  * @return {Dynamic}
 '  */
-function notify(event as object)
-	errorInfo = event.getData()
-
+function notify(errorInfo as object)
 	errorClass = errorInfo.errorClass
 	errorMessage = errorInfo.errorMessage
 	severity = errorInfo.severity

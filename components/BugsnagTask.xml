@@ -6,7 +6,7 @@
 		<field id="apiKey" type="String" />
 		<field id="user" type="AssocArray" />
 
-		<field id="notify" type="AssocArray" onChange="bugsnagroku_notify" />
+		<field id="notify" type="AssocArray" />
 
 		<field id="reportChannelClientId" type="Boolean" value="true" />
 		<field id="useIpAsUserId" type="Boolean" value="true" />
