@@ -251,7 +251,11 @@ function createDevicePayload()
 		device["deviceId"] = deviceInfo.GetChannelClientId()
 	end if
 
-	device["firmwareVersion"] = deviceInfo.GetOSVersion()
+	if FindMemberFunction(deviceInfo, "GetOSVersion") <> invalid
+		device["firmwareVersion"] = deviceInfo.GetOSVersion()
+	else 
+		device["firmwareVersion"] = deviceInfo.GetVersion()
+	end if
 
 	return device
 end function
