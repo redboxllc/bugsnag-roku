@@ -7,15 +7,14 @@
 		<field id="user" type="AssocArray" />
 
 		<field id="notify" type="AssocArray" />
+		<field id="leaveBreadcrumb" type="AssocArray" />
+		<field id="updateUser" type="AssocArray" />
 
 		<field id="reportChannelClientId" type="Boolean" value="true" />
 		<field id="useIpAsUserId" type="Boolean" value="true" />
 		<field id="enableHttpLogs" type="Boolean" value="false" />
 
 		<field id="session" type="AssocArray" />
-
-		<function name="bugsnagroku_leaveBreadcrumb" />
-		<function name="bugsnagroku_updateUser" />
 	</interface>
 
 	<script type="text/brightscript" uri="pkg:/components/BugsnagTask.brs" />
