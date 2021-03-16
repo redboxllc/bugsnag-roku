@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/redboxllc/bugsnag-roku/compare/v3.0.0...v4.0.0) (2021-03-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* this changes BugsnagTask's API, as we're not using function anymore in order to make sure that all code is being executed on the Task thread
+
+* remove function fields and replace them as AA fields ([2f4a1a7](https://github.com/redboxllc/bugsnag-roku/commit/2f4a1a7dacce7ed5383831f835300c907e9432c3))
+
 ## [3.0.0](https://github.com/redboxllc/bugsnag-roku/compare/v2.0.0...v3.0.0) (2021-02-17)
 
 
