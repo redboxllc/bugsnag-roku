@@ -1,12 +1,48 @@
 function init()
+	m.top.id = "BugsnagTask"
+	m.top.functionName = "bugsnagroku_startTask"
+
+	m.port = CreateObject("roMessagePort")
+	m.top.observeFieldScoped("notify", m.port)
+	m.top.observeFieldScoped("leaveBreadcrumb", m.port)
+	m.top.observeFieldScoped("updateUser", m.port)
+end function
+
+'***************
+' startBugsnagTask:
+' @desc Long running task to execute HTTP requests
+'***************
+function startTask()
+	initDefaultValues()
+	startSession()
+
+	while (true)
+		event = Wait(0, m.port)
+		eventType = Type(event)
+		if eventType = "roUrlEvent"
+			handleHTTPResponse(event)
+		else if eventType = "roSGNodeEvent"
+			field = event.GetField()
+			if field = "notify"
+				eventData = event.GetData()
+				notify(eventData)
+			else if field = "leaveBreadcrumb"
+				eventData = event.GetData()
+				leaveBreadcrumb(eventData.name, eventData.breadcrumbType, eventData.metaData)
+			else if field = "updateUser"
+				eventData = event.GetData()
+				updateUser(eventData)
+			end if
+		end if
+	end while
+end function
+
+sub initDefaultValues()
 	m.notifier = {
 		name: "Bugsnag Roku",
 		url: "https://github.com/redboxllc/bugsnag-roku"
 		version: "1.0.0"
 	}
-
-	m.top.id = "BugsnagTask"
-	m.top.functionName = "bugsnagroku_startTask"
 
 	if m.top.user = invalid
 		m.user = {}
@@ -18,11 +54,7 @@ function init()
 		m.user.id = getDeviceInfo().GetExternalIp()
 	end if
 
-	' Create a Message Port'
-	m.port = CreateObject("roMessagePort")
-
 	m.jobs = {}
-
 	loadedBreadcrumb = {
 		name: "Bugsnag loaded",
 		timestamp: getNowISO(),
@@ -36,31 +68,7 @@ function init()
 		warning: true,
 		info: true,
 	}
-end function
-
-'***************
-' startBugsnagTask:
-' @desc Long running task to execute HTTP requests
-'***************
-function startTask()
-	startSession()
-
-	m.top.observeFieldScoped("notify", m.port)
-
-	while (true)
-		event = Wait(0, m.port)
-		eventType = Type(event)
-		if eventType = "roUrlEvent"
-			handleHTTPResponse(event)
-		else if eventType = "roSGNodeEvent"
-			field = event.GetField()
-			if field = "notify"
-				eventData = event.GetData()
-				notify(eventData)
-			end if
-		end if
-	end while
-end function
+end sub
 
 function startSession()
 	data = {
