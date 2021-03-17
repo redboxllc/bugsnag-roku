@@ -18,7 +18,8 @@
 	],
 	"author": "Miloš Rašić <milos.rasic@redbox.com>",
 	"contributors": [
-		"Darko Tasevski <darko.tasevski@redbox.com>"
+		"Darko Tasevski <darko.tasevski@redbox.com>",
+		"Igor Perzic <igor.perzic@redbox.com>"
 	],
 	"license": "Apache-2.0",
 	"bugs": {
