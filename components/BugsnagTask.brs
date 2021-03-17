@@ -254,12 +254,13 @@ function createDevicePayload()
 	if FindMemberFunction(deviceInfo, "GetOSVersion") <> invalid
 		device["firmwareVersion"] = deviceInfo.GetOSVersion()
 	else 
+		' Example version: 034.08E01185A
 		version = deviceInfo.GetVersion()
 		device["firmwareVersion"] = {
-			major: Val(version.mid(2, 1))
-			minor: Val(version.mid(4, 2))
-			revision: "n/a"
-			build: Val(version.mid(8, 4))
+			major: Val(version.mid(2, 1)) ' From example, character 4
+			minor: Val(version.mid(4, 1)) ' From example, character 0
+			revision: Val(version.mid(5, 1)) ' From example, character 8
+			build: Val(version.mid(8, 4)) ' From example, characters 1185
 		}
 	end if
 
