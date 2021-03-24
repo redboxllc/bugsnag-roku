@@ -1,6 +1,6 @@
 function init()
 	m.top.id = "BugsnagTask"
-	m.top.functionName = "bugsnagroku_startTask"
+	m.top.functionName = "startTask"
 
 	m.port = CreateObject("roMessagePort")
 	m.top.observeFieldScoped("notify", m.port)
@@ -253,7 +253,7 @@ function createDevicePayload()
 
 	if FindMemberFunction(deviceInfo, "GetOSVersion") <> invalid
 		device["firmwareVersion"] = deviceInfo.GetOSVersion()
-	else 
+	else
 		' Example version: 034.08E01185A
 		version = deviceInfo.GetVersion()
 		device["firmwareVersion"] = {
