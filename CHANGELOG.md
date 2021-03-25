@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.0.1](https://github.com/redboxllc/bugsnag-roku/compare/v4.0.0...v4.0.1) (2021-03-25)
+
+
+### Bug Fixes
+
+* handle roku firmware lower than 9.2 ([6cef4ba](https://github.com/redboxllc/bugsnag-roku/commit/6cef4baf2bfff15312cfa4a6b825c8d89984e92d))
+* runFunction name for BugsnagTask ([d560542](https://github.com/redboxllc/bugsnag-roku/commit/d560542480225c0c85f68626461fbbabe89593dc))
+
 ## [4.0.0](https://github.com/redboxllc/bugsnag-roku/compare/v3.0.0...v4.0.0) (2021-03-16)
 
 
