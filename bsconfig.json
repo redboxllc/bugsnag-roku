@@ -1,0 +1,5 @@
+// https://github.com/rokucommunity/brighterscript brighterscript config
+{
+	"files": ["components/**/*.*", "source/**/*.*"],
+	"plugins": ["@rokucommunity/bslint"]
+}

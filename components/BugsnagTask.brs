@@ -1,4 +1,4 @@
-function init()
+sub init()
 	m.top.id = "BugsnagTask"
 	m.top.functionName = "startTask"
 
@@ -6,13 +6,13 @@ function init()
 	m.top.observeFieldScoped("notify", m.port)
 	m.top.observeFieldScoped("leaveBreadcrumb", m.port)
 	m.top.observeFieldScoped("updateUser", m.port)
-end function
+end sub
 
 '***************
 ' startBugsnagTask:
 ' @desc Long running task to execute HTTP requests
 '***************
-function startTask()
+sub startTask()
 	initDefaultValues()
 	startSession()
 
@@ -35,7 +35,7 @@ function startTask()
 			end if
 		end if
 	end while
-end function
+end sub
 
 sub initDefaultValues()
 	m.notifier = {
@@ -70,7 +70,7 @@ sub initDefaultValues()
 	}
 end sub
 
-function startSession()
+sub startSession()
 	data = {
 		app: createAppPayload(),
 		device: createDevicePayload(),
@@ -101,7 +101,6 @@ function startSession()
 
 	sendRequest({
 		url: "https://sessions.bugsnag.com",
-		method: "POST",
 		headers: {
 			"bugsnag-api-key": m.top.apiKey,
 			"bugsnag-payload-version": "1",
@@ -110,17 +109,17 @@ function startSession()
 		data: data,
 		jsonResponse: true
 	})
-end function
+end sub
 
-function updateUser(userDiff as object)
+sub updateUser(userDiff as object)
 	if userDiff <> invalid
 		for each diffKey in userDiff
 			m.user[diffKey] = userDiff[diffKey]
 		end for
 	end if
-end function
+end sub
 
-function leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {})
+sub leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {})
 	breadcrumb = {
 		name: name,
 		type: breadcrumbType,
@@ -132,7 +131,7 @@ function leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {}
 	end if
 
 	m.breadcrumbs.Push(breadcrumb)
-end function
+end sub
 
 ' /**
 '  * notify: Notifies the Bugsnag API that an error(s) has happened, and leaves an error breadcrumb
@@ -140,7 +139,7 @@ end function
 '  * @param {errorClass as string, errorMessage as string, severity as string, context as string, exceptions as object, metaData as object} errorInfo
 '  * @return {Dynamic}
 '  */
-function notify(errorInfo as object)
+sub notify(errorInfo as object)
 	errorClass = errorInfo.errorClass
 	errorMessage = errorInfo.errorMessage
 	severity = errorInfo.severity
@@ -175,14 +174,14 @@ function notify(errorInfo as object)
 		event["exceptions"] = [exception]
 	end if
 
-	if (metadata <> invalid)
+	if metaData <> invalid
 		event["metaData"] = metaData
 	end if
 
 	event["payloadVersion"] = "4"
 
 	resolvedSeverity = "error"
-	if (severity <> invalid and m.severities.doesExist(severity))
+	if severity <> invalid and m.severities.doesExist(severity)
 		resolvedSeverity = severity
 	end if
 
@@ -207,7 +206,6 @@ function notify(errorInfo as object)
 
 	sendRequest({
 		url: "https://notify.bugsnag.com",
-		method: "POST",
 		headers: {
 			"bugsnag-api-key": m.top.apiKey,
 			"bugsnag-payload-version": "4",
@@ -221,7 +219,7 @@ function notify(errorInfo as object)
 	breadcrumbMetadata["errorMessage"] = errorMessage
 
 	leaveBreadcrumb(errorClass, "error", breadcrumbMetadata)
-end function
+end sub
 
 function createAppPayload()
 	app = {
@@ -273,7 +271,7 @@ function getNowISO()
 end function
 
 function getAudioGuideStatusAsString()
-	if (getDeviceInfo().IsAudioGuideEnabled())
+	if getDeviceInfo().IsAudioGuideEnabled()
 		return "true"
 	else
 		return "false"
@@ -281,10 +279,10 @@ function getAudioGuideStatusAsString()
 end function
 
 '***************
-' @desc Handles HTTP requests
+' @desc Handles HTTP requests (POST only)
 ' @param Object roSGNode event
 '***************
-function sendRequest(request as object) as void
+sub sendRequest(request as object) as void
 	httpTransfer = CreateObject("roUrlTransfer")
 
 	if httpTransfer = invalid
@@ -301,37 +299,9 @@ function sendRequest(request as object) as void
 		httpTransfer.InitClientCertificates()
 	end if
 
-	REM resolve and set http method
-	method = "GET"
-	if request.DoesExist("method")
-		method = request.method
-	end if
-	if method <> "GET" or method <> "POST"
-		httpTransfer.SetRequest(method)
-	end if
-	isGetLikeRequest = method = "GET" or method = "DELETE"
-	isPostLikeRequest = method = "POST" or method = "PUT" or method = "PATCH"
+	requestBody = FormatJson(request.data)
+	httpTransfer.SetUrl(request.url)
 
-	REM resolve and set request data
-	if isGetLikeRequest
-		queryStringParts = []
-		for each param in request.data
-			queryStringParts.Push(param + "=" + httpTransfer.Escape(params.data[param].ToStr()))
-		end for
-
-		queryString = "?" + queryStringParts.Join("&")
-	else if isPostLikeRequest
-		requestBody = FormatJson(request.data)
-	end if
-
-	REM build and set the url
-	if isGetLikeRequest
-		httpTransfer.SetUrl(request.url + queryString)
-	else if isPostLikeRequest
-		httpTransfer.SetUrl(request.url)
-	end if
-
-	REM set headers
 	if request.headers <> invalid
 		httpTransfer.SetHeaders(request.headers)
 	end if
@@ -342,12 +312,7 @@ function sendRequest(request as object) as void
 	httpTransfer.SetPort(m.port)
 	httpTransfer.SetMessagePort(m.port)
 
-	REM perform the request
-	if isGetLikeRequest
-		success = httpTransfer.AsyncGetToString()
-	else if isPostLikeRequest
-		success = httpTransfer.AsyncPostFromString(requestBody)
-	end if
+	success = httpTransfer.AsyncPostFromString(requestBody)
 
 	if success
 		identity = httpTransfer.GetIdentity()
@@ -359,13 +324,13 @@ function sendRequest(request as object) as void
 			logNetworkError(error)
 		end if
 	end if
-end function
+end sub
 
 '***************
 ' @desc Handles HTTP Responses
 ' @param object roUrlEvent Object
 '***************
-function handleHTTPResponse(event)
+sub handleHTTPResponse(event)
 	transferComplete = (event.GetInt() = 1)
 
 	if transferComplete
@@ -384,9 +349,9 @@ function handleHTTPResponse(event)
 
 		m.jobs.Delete(identity.toStr())
 	end if
-end function
+end sub
 
-function logNetworkError(error as object)
+sub logNetworkError(error as object)
 	request = error.request
 	print " **************************************** HTTP ERROR ****************************************** "
 	print " ======================================== Request info ======================================== "
@@ -407,13 +372,13 @@ function logNetworkError(error as object)
 	print " Error code: ", error.code
 	print " Failure Reason: "; error.msg
 	print " ************************************************************************************************* "
-end function
+end sub
 
-function logNetworkResponse(roUrlEvt as object)
+sub logNetworkResponse(roUrlEvt as object)
 	print " **************************************** HTTP RESPONSE ****************************************** "
 	print " ======================================== Response info ======================================== "
 	print chr(10)
-	if response <> invalid
+	if roUrlEvt <> invalid
 		print " Response code: " + roUrlEvt.GetResponseCode() + chr(10)
 		print " Response Body: "; roUrlEvt.GetString()
 		print " Response Headers: " + chr(10)
@@ -421,4 +386,4 @@ function logNetworkResponse(roUrlEvt as object)
 			print " " + header + chr(10)
 		end for
 	end if
-end function
+end sub
