@@ -5,7 +5,13 @@
 	"main": "index.js",
 	"scripts": {
 		"release": "standard-version",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "bslint --project ./bsconfig.json"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "yarn lint"
+		}
 	},
 	"repository": {
 		"type": "git",
@@ -29,6 +35,7 @@
 	"devDependencies": {
 		"@rokucommunity/bslint": "^0.1.0",
 		"brighterscript": "^0.37.4",
+		"husky": "^6.0.0",
 		"standard-version": "^9.0.0"
 	}
 }
