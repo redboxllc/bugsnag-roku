@@ -27,7 +27,8 @@
 	},
 	"homepage": "https://github.com/redboxllc/bugsnag-roku#readme",
 	"devDependencies": {
+		"@rokucommunity/bslint": "^0.1.0",
+		"brighterscript": "^0.37.4",
 		"standard-version": "^9.0.0"
-	},
-	"dependencies": {}
+	}
 }
