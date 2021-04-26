@@ -1,0 +1,19 @@
+{
+	"rules": {
+		"inline-if-style": "then",
+		"block-if-style": "no-then",
+		"condition-style": "no-group",
+		"named-function-style": "no-sub",
+		"anon-function-style": "no-sub",
+
+		"type-annotations": "off",
+
+		"assign-all-paths": "error",
+		"unsafe-path-loop": "error",
+		"unsafe-iterators": "error",
+		"unreachable-code": "info",
+		"case-sensitivity": "warn",
+		"unused-variable": "warn",
+		"consistent-return": "error"
+	}
+}

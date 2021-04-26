@@ -1,4 +1,4 @@
-sub init()
+function init()
 	m.top.id = "BugsnagTask"
 	m.top.functionName = "startTask"
 
@@ -6,13 +6,13 @@ sub init()
 	m.top.observeFieldScoped("notify", m.port)
 	m.top.observeFieldScoped("leaveBreadcrumb", m.port)
 	m.top.observeFieldScoped("updateUser", m.port)
-end sub
+end function
 
 '***************
 ' startBugsnagTask:
 ' @desc Long running task to execute HTTP requests
 '***************
-sub startTask()
+function startTask()
 	initDefaultValues()
 	startSession()
 
@@ -35,9 +35,9 @@ sub startTask()
 			end if
 		end if
 	end while
-end sub
+end function
 
-sub initDefaultValues()
+function initDefaultValues()
 	m.notifier = {
 		name: "Bugsnag Roku",
 		url: "https://github.com/redboxllc/bugsnag-roku"
@@ -68,9 +68,9 @@ sub initDefaultValues()
 		warning: true,
 		info: true,
 	}
-end sub
+end function
 
-sub startSession()
+function startSession()
 	data = {
 		app: createAppPayload(),
 		device: createDevicePayload(),
@@ -109,17 +109,17 @@ sub startSession()
 		data: data,
 		jsonResponse: true
 	})
-end sub
+end function
 
-sub updateUser(userDiff as object)
+function updateUser(userDiff as object)
 	if userDiff <> invalid
 		for each diffKey in userDiff
 			m.user[diffKey] = userDiff[diffKey]
 		end for
 	end if
-end sub
+end function
 
-sub leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {})
+function leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {})
 	breadcrumb = {
 		name: name,
 		type: breadcrumbType,
@@ -131,7 +131,7 @@ sub leaveBreadcrumb(name as string, breadcrumbType as string, metaData = {})
 	end if
 
 	m.breadcrumbs.Push(breadcrumb)
-end sub
+end function
 
 ' /**
 '  * notify: Notifies the Bugsnag API that an error(s) has happened, and leaves an error breadcrumb
@@ -139,7 +139,7 @@ end sub
 '  * @param {errorClass as string, errorMessage as string, severity as string, context as string, exceptions as object, metaData as object} errorInfo
 '  * @return {Dynamic}
 '  */
-sub notify(errorInfo as object)
+function notify(errorInfo as object)
 	errorClass = errorInfo.errorClass
 	errorMessage = errorInfo.errorMessage
 	severity = errorInfo.severity
@@ -181,7 +181,7 @@ sub notify(errorInfo as object)
 	event["payloadVersion"] = "4"
 
 	resolvedSeverity = "error"
-	if severity <> invalid and m.severities.doesExist(severity)
+	if severity <> invalid and m.severities.DoesExist(severity)
 		resolvedSeverity = severity
 	end if
 
@@ -219,7 +219,7 @@ sub notify(errorInfo as object)
 	breadcrumbMetadata["errorMessage"] = errorMessage
 
 	leaveBreadcrumb(errorClass, "error", breadcrumbMetadata)
-end sub
+end function
 
 function createAppPayload()
 	app = {
@@ -282,7 +282,7 @@ end function
 ' @desc Handles HTTP requests (POST only)
 ' @param Object roSGNode event
 '***************
-sub sendRequest(request as object) as void
+function sendRequest(request as object) as void
 	httpTransfer = CreateObject("roUrlTransfer")
 
 	if httpTransfer = invalid
@@ -324,13 +324,13 @@ sub sendRequest(request as object) as void
 			logNetworkError(error)
 		end if
 	end if
-end sub
+end function
 
 '***************
 ' @desc Handles HTTP Responses
 ' @param object roUrlEvent Object
 '***************
-sub handleHTTPResponse(event)
+function handleHTTPResponse(event)
 	transferComplete = (event.GetInt() = 1)
 
 	if transferComplete
@@ -349,9 +349,9 @@ sub handleHTTPResponse(event)
 
 		m.jobs.Delete(identity.toStr())
 	end if
-end sub
+end function
 
-sub logNetworkError(error as object)
+function logNetworkError(error as object)
 	request = error.request
 	print " **************************************** HTTP ERROR ****************************************** "
 	print " ======================================== Request info ======================================== "
@@ -372,9 +372,9 @@ sub logNetworkError(error as object)
 	print " Error code: ", error.code
 	print " Failure Reason: "; error.msg
 	print " ************************************************************************************************* "
-end sub
+end function
 
-sub logNetworkResponse(roUrlEvt as object)
+function logNetworkResponse(roUrlEvt as object)
 	print " **************************************** HTTP RESPONSE ****************************************** "
 	print " ======================================== Response info ======================================== "
 	print chr(10)
@@ -386,4 +386,4 @@ sub logNetworkResponse(roUrlEvt as object)
 			print " " + header + chr(10)
 		end for
 	end if
-end sub
+end function
