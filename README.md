@@ -32,10 +32,10 @@ There is currently no way to automatically handle all errors or collect user int
 ## Configuration fields
 
 | Field | Default value | Description |
-| --- | --- | --- |
+| --- |:---:|:---:|
 | releaseStage | "" | Release stage like production, prod, dev, development, stage, QA, test, etc. Can be any string. |
 | appVersion | "" | Version of the application that's using bugsnag-roku. If the version in the manifest is correct, this can be retreived from an instance of `roAppInfo` |
-| apiKey | "" | Your Bugsnag API key. Each project has a different API key. |
+| apiKey |  | Your Bugsnag API key. Each project has a different API key. |
 | user | {} | Initial user data. This can be updated later using `bugsnagroku_updateUser()` function. If user ID is not set, the library may set it to device IP automatically (see below) |
 | reportChannelClientId | true | Whether to report channel client ID as part of device info. Client channel ID is unique per device/channel combination. It can uniquely identify a user within a Roku channel but not between multiple channels. |
 | useIpAsUserId | true | Whether to set user ID to device IP if it's not set in the initial user data. |
@@ -56,13 +56,13 @@ m.top.bugsnagTask.notify = { errorClass: errorClass, errorMessage: errorMessage,
 ```
 
 | Param | Description |
-| --- | --- | --- |
+| --- | --- |
 | errorClass | Error class shown in Bugsnag UI. Since there is no automatic error handling in BrightScript, this can be any string. Something like "HttpError" or "ValidationError" is recommended since Bugsnag UI is designed to show error classes like that from other languages. |
 | errorMessage | Error message shown in Bugsnag UI. This should concisely describe what happened so that it can be easily both read and searched. |
 | severity | Event severity as defined by Bugsnag API. It can be `error`, `warning` or `info`. If an invalid value is supplied, the library will default to `error`. |
 | context | Location where the error happened. In web UIs this is the URL. Since Roku has no notion of a URL, this can be omitted, but it might be a good idea to send at least the name of the file where error occurred. |
-| metaData | Metadata to attached to event. |  |
-| exceptions | Array of errorClass exceptions related to the error happened |  |
+| metaData | Metadata to attached to event. | 
+| exceptions | Array of errorClass exceptions related to the error happened | 
 
 ```brightscript
 bugsnagroku_updateUser(userDiff as Object)
